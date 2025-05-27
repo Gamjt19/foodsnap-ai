@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodSnap AI</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>FoodSnap AI</h1>
+        <p>Upload a food image to get nutritional information!</p>
+        
+        <input type="file" id="imageUpload" accept="image/*">
+        <div id="imagePreview" class="preview"></div>
+        <div id="loadingSpinner" class="spinner" style="display: none;">
+            <i class="fas fa-spinner fa-spin"></i> Loading...
+        </div>
+        
+        <button id="submitBtn">Get Nutritional Info</button>
+        
+        <div id="results" class="results"></div>
+    </div>
+
+    <script src="assets/js/script.js"></script>
+</body>
+</html>

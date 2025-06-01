@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Food Recognition</title>
+<style>
+  /* Reset */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem 1rem;
+    color: #333;
+  }
+  h1 {
+    font-weight: 900;
+    font-size: 2.5rem;
+    margin-bottom: 0.25rem;
+    color: #c62e65;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+  }
+  p.description {
+    margin: 0 0 2rem 0;
+    font-size: 1.1rem;
+    max-width: 400px;
+    text-align: center;
+    color: #5a2a3a;
+  }
+  form {
+    background: #fff;
+    padding: 1.75rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(198, 46, 101, 0.3);
+    max-width: 400px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  input[type="file"] {
+    display: none;
+  }
+  label.file-label {
+    background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background 0.3s ease;
+    user-select: none;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(255,75,43,0.5);
+  }
+  label.file-label:hover {
+    background: linear-gradient(135deg, #ff4b2b 0%, #ff416c 100%);
+  }
+  img#preview {
+    max-width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(198, 46, 101, 0.25);
+    margin-bottom: 1rem;
+    display: none;
+    object-fit: contain;
+  }
+  button#submit-btn {
+    background: #c62e65;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 28px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 100%;
+    box-shadow: 0 6px 18px rgba(198, 46, 101, 0.5);
+  }
+  button#submit-btn:disabled {
+    background: #daa0af;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  button#submit-btn:hover:not(:disabled) {
+    background: #a82653;
+  }
+  #result {
+    margin-top: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #4a133e;
+    min-height: 1.5em;
+    text-align: center;
+    user-select: none;
+  }
+  #error {
+    margin-top: 1rem;
+    color: #d32f2f;
+    font-weight: 600;
+    text-align: center;
+    min-height: 1.2em;
+  }
+  @media (max-width: 480px) {
+    body {
+      padding: 1.5rem 1rem;
+    }
+    h1 {
+      font-size: 2rem;
+    }
+    form {
+      padding: 1.25rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <h1>Food Recognition</h1>
+  <p class="description">Upload a photo of food, and let our AI identify it for you!</p>
+  <form id="upload-form" onsubmit="return false;" aria-label="Food image upload form">
+    <input type="file" id="file-input" accept="image/*" aria-describedby="file-desc" />
+    <label for="file-input" class="file-label" id="file-desc" tabindex="0">Choose Image</label>
+    <img id="preview" alt="Image preview" />
+    <button id="submit-btn" disabled>Identify Food</button>
+    <div id="result" role="alert" aria-live="polite"></div>
+    <div id="error" role="alert" aria-live="assertive"></div>
+  </form>
+
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const preview = document.getElementById('preview');
+    const submitBtn = document.getElementById('submit-btn');
+    const result = document.getElementById('result');
+    const error = document.getElementById('error');
+
+    // Show preview and enable button when file is selected
+    fileInput.addEventListener('change', () => {
+      error.textContent = '';
+      result.textContent = '';
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        if (!file.type.startsWith('image/')) {
+          preview.style.display = 'none';
+          submitBtn.disabled = true;
+          error.textContent = 'Please select a valid image file.';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        submitBtn.disabled = false;
+      } else {
+        preview.style.display = 'none';
+        submitBtn.disabled = true;
+      }
+    });
+
+    // Handle submit button click
+    submitBtn.addEventListener('click', async () => {
+      error.textContent = '';
+      result.textContent = '';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Identifying...';
+
+      try {
+        const file = fileInput.files[0];
+        if (!file) {
+          error.textContent = 'No image file selected.';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Identify Food';
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Make POST request to backend API
+        const response = await fetch('http://localhost:8000/predict/', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          const msg = errData.detail || 'Failed to identify the food item.';
+          throw new Error(msg);
+        }
+
+        const data = await response.json();
+        if (data.prediction) {
+            result.textContent = `Predicted Food: ${data.prediction}`;
+            }
+         else {
+          throw new Error('Unexpected response from server.');
+        }
+      } catch (err) {
+        error.textContent = err.message;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Identify Food';
+      }
+    });
+  </script>
+</body>
+</html>
+

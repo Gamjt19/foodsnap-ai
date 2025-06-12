@@ -1,10 +1,11 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from torchvision import models, transforms
 import torch
 import torch.nn as nn
 from PIL import Image
 import io
+import json
 
 app = FastAPI()
 
@@ -38,7 +39,7 @@ transform = transforms.Compose([
 ])
 
 @app.post("/predict/")
-async def predict(file: UploadFile = File(...)):
+async def predict(file: UploadFile = File(...), quantity: int = Form(...)):
     image_bytes = await file.read()
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image = transform(image).unsqueeze(0)  # Add batch dimension
@@ -47,5 +48,29 @@ async def predict(file: UploadFile = File(...)):
         outputs = model(image)
         _, predicted = outputs.max(1)
         class_name = class_names[predicted.item()]
+        
 
-    return {"prediction": class_name}
+   
+
+    # STEP 2: Load calorie data from JSON
+    with open("food_cal.json", "r") as f:
+        calorie_data = json.load(f)
+
+    # STEP 3: Set quantity (either user input or predefined average)
+    
+    # STEP 4: Calculate calories
+    if class_name in calorie_data:
+        cal_per_100g = calorie_data[class_name]["calories_per_100g"]
+        total_calories = (cal_per_100g / 100) * quantity
+    else:
+        total_calories = None
+
+    # STEP 5: Return response
+    return {
+        "predicted_class": class_name,
+        "quantity_in_grams": quantity,
+        "calories": f"{total_calories:.2f} kcal" if total_calories is not None else "Not available"
+    }
+    
+
+# Load the calorie database

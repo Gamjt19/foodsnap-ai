@@ -1,0 +1,11 @@
+{
+  "banana": { "calories_per_100g": 89 },
+  "apple": { "calories_per_100g": 52 },
+  "Biriyani": { "calories_per_100g": 117 },
+  "chicken curry": { "calories_per_100g": 180 },
+  "idli": { "calories_per_100g": 58 },
+  "dosa": { "calories_per_100g": 97 },
+  "paneer": { "calories_per_100g": 265 },
+  "Chapathi": { "calories_per_100g": 104 },
+  "Porotta": { "calories_per_100g": 250 }
+}
